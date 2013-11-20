@@ -10,14 +10,16 @@ class fut(threading.Thread):
         self.start()
     def run(self):
         self.val = self.fn()
-    def deref(self):
-        self.join()
+    def deref(self, timeout_ms=None, timeout_val=None):
+        self.join(timeout_ms and (timeout_ms / 1000.0))
+        if self.is_alive():
+            return timeout_val
         return self.val
     def __call__(self):
         return self.deref()
 
-def deref(f):
-    return f.deref()
+def deref(f, timeout_ms=None, timeout_val=None):
+    return f.deref(timeout_ms, timeout_val)
 
 def pmap(f, *seqs):
     return map(deref, map(lambda args: fut(f, *args), zip(*seqs)))
