@@ -4,27 +4,34 @@
 import threading, Queue
 
 class future(threading.Thread):
+
     def __init__(self, fn, *args, **kwargs):
         threading.Thread.__init__(self)
         self.fn = lambda: fn(*args, **kwargs)
         self.val = None
         self.start()
+
     def run(self):
         self.val = self.fn()
+
     def deref(self, timeout_ms=None, timeout_val=None):
         self.join(timeout_ms and (timeout_ms / 1000.0))
         if self.is_alive():
             return timeout_val
         return self.val
+
     def __call__(self):
         return self.deref()
+
 
 def deref(f, timeout_ms=None, timeout_val=None):
     return f.deref(timeout_ms, timeout_val)
 #deref = future.deref
 
+
 def pmap(f, *seqs):
     return map(deref, map(lambda args: future(f, *args), zip(*seqs)))
+
 
 ############ p_map is not thread safe ##########
 def p_map(f, seqs, pool_size=30):
@@ -51,16 +58,21 @@ def p_map(f, seqs, pool_size=30):
             return self.capacity > 0
     return ResultSet(q, len(argvs))
         
+
 ############################## Girl ################################
 # Girl is a Observable object, implements by use Closure
 ####################################################################
 class Girl(object):
+
     def __init__(self, o):
         self.o = o
+
     def reset(self, no):
         self.o = no
+
     def swap(self, fn, *args, **kwargs):
         self.o = fn(self.o, *args, **kwargs)
+
     def add_watch(self, k, watch):
         def wrap(fn):
             def nfn(*args, **kwargs):
@@ -70,10 +82,13 @@ class Girl(object):
             return nfn
         self.reset = wrap(self.reset)
         self.swap = wrap(self.swap)
+
     def deref(self):
         return self.o
+
     def __call__(self):
         return self.o
+
 
 '''
 class Girl(object):
@@ -104,17 +119,22 @@ class Girl(object):
         return nv
 '''
 
+
 def add_watch(g, k, w):
     g.add_watch(k, w)
+
 
 def reset(g, no):
     g.reset(no)
 
+
 def swap(g, fn, *args, **kwargs):
     g.swap(fn, *args, **kwargs)
 
+
 def  inc(x):
     return x + 1
+
 
 def dostream(ret, *ls):
     for l in ls:
@@ -136,14 +156,11 @@ def donestream(ret, *ls):
             raise Exception("bad arguments", l)
     return ret
 
+
 def key(item): return item[0]
 get = dict.__getitem__
-
 def val(item): return item[1]
 def nth(l, idx): return l[idx]
-
 def first(l): return l[0]
-
 def second(l): return l[1]
-
 def last(l): return l[-1]

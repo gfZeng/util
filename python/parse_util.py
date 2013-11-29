@@ -90,11 +90,13 @@ def test():
             'episodes': ((select, "div.pp.similarLists"),
                          first,
                          (select, "ul > li"),
-                         (pam, {'intro': '',
-                                'source': ((select_one, 'a'),
-                                           (Tag.get, 'href')),
-                                           'poster': ((select_one, 'img'),
-                                                      (Tag.get, 'src'))}),),
+                         (pam, {
+                             'intro': '',
+                             'source': ((select_one, 'a'),
+                                 (Tag.get, 'href')),
+                             'poster': ((select_one, 'img'),
+                                 (Tag.get, 'src'))
+                             })),
             },
         ((select, "div.blockRA"), first): {
             'title': ((select_one, 'h2 span'), text, str_strip),
