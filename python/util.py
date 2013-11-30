@@ -1,6 +1,14 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
+#######################################################
+# @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
+# @Setup Time:   Saturday, 30 November 2013.
+# @Updated Time: 2013-11-30 16:23:23
+# @Description:  
+#######################################################
+
+
 import threading, Queue
 
 class future(threading.Thread):
@@ -164,3 +172,13 @@ def nth(l, idx): return l[idx]
 def first(l): return l[0]
 def second(l): return l[1]
 def last(l): return l[-1]
+
+
+def timing(f):
+    def wrapped(*args, **kwargs):
+        t = time.time()
+        try:
+            return f(*args, **kwargs)
+        finally:
+            print "Elapsed time:", time.time() - t, "msecs"
+    return wrapped
