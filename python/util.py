@@ -4,13 +4,14 @@
 #######################################################
 # @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 # @Setup Time:   Saturday, 30 November 2013.
-# @Updated Time: 2013-11-30 16:23:23
+# @Updated Time: 2013-12-01 23:48:42
 # @Description:  
 #######################################################
 
 
-import threading, Queue
+import threading, Queue, time
 
+####################### Concurrence ###################
 class future(threading.Thread):
 
     def __init__(self, fn, *args, **kwargs):
@@ -40,8 +41,10 @@ def deref(f, timeout_ms=None, timeout_val=None):
 def pmap(f, *seqs):
     return map(deref, map(lambda args: future(f, *args), zip(*seqs)))
 
+def pcall(fs):
+    return map(deref, [future(f) for f in fs])
 
-############ p_map is not thread safe ##########
+### p_map is not thread safe 
 def p_map(f, seqs, pool_size=30):
     q = Queue.Queue(pool_size)
     ret = []
@@ -61,15 +64,18 @@ def p_map(f, seqs, pool_size=30):
             if self.capacity > 0:
                 self.capacity -= 1
                 return deref(self.q.get())
-            raise Exception("no more elements", "idiot!!!")
-        def has_next(self):
-            return self.capacity > 0
+            raise StopIteration
+            #raise Exception("no more elements", "idiot!!!")
+        #def has_next(self): return self.capacity > 0
+        def __iter__(self): return self
     return ResultSet(q, len(argvs))
+####################### Concurrence END ###################
         
 
-############################## Girl ################################
-# Girl is a Observable object, implements by use Closure
-####################################################################
+####################### Observer ######################
+
+### Girl is a Observable object, implements by use Closure
+'''
 class Girl(object):
 
     def __init__(self, o):
@@ -96,54 +102,46 @@ class Girl(object):
 
     def __call__(self):
         return self.o
-
-
 '''
+
 class Girl(object):
     def __init__(self, v):
         self.v = v
-        self.wathers = []
+        self.watchers = []
 
     def add_watch(self, k, w):
-        self.watchers.append(lambda r, ov, nv: w(k, r, ov, nv))
-
-    def _notify_watchers(ov, nv):
-        for w in self.watchers:
+        self.watchers.append((k, w))
+    def remove_watch(self, k, w):
+        self.watchers.remove((k, w))
+        
+    def _notify_watchers(self, ov, nv):
+        for k, w in self.watchers:
             try:
-                w(self, ov, nv)
+                w(k, self, ov, nv)
             except e:
                 print e
 
     def reset(self, nv):
         ov = self.v
         self.v = nv
-        _notify_watchers(ov, self.v)
+        self._notify_watchers(ov, self.v)
         return nv
 
     def swap(self, fn, *args, **kwargs):
         ov = self.v
         self.v = fn(self.v, *args, **kwargs)
-        _notify_watchers(ov, self.v)
+        self._notify_watchers(ov, self.v)
         return nv
-'''
 
 
-def add_watch(g, k, w):
-    g.add_watch(k, w)
+def add_watch(g, k, w): g.add_watch(k, w)
+def remove_watch(g, k, w): g.remove_watch(k, w)
+def reset(g, no): g.reset(no)
+def swap(g, fn, *args, **kwargs): g.swap(fn, *args, **kwargs)
+####################### Observer END ######################
 
 
-def reset(g, no):
-    g.reset(no)
-
-
-def swap(g, fn, *args, **kwargs):
-    g.swap(fn, *args, **kwargs)
-
-
-def  inc(x):
-    return x + 1
-
-
+####################### stream handler ####################
 def dostream(ret, *ls):
     for l in ls:
         if hasattr(l, '__call__'):
@@ -163,17 +161,27 @@ def donestream(ret, *ls):
         else:
             raise Exception("bad arguments", l)
     return ret
+####################### stream handler END####################
 
 
+############################# util fn ########################
 def key(item): return item[0]
-get = dict.__getitem__
 def val(item): return item[1]
+
+#get = dict.__getitem__
+def get(x): return x.get()
+
 def nth(l, idx): return l[idx]
 def first(l): return l[0]
 def second(l): return l[1]
 def last(l): return l[-1]
 
+def  inc(x): return x + 1 
+def  dec(x): return x - 1
+############################# util fn END ########################
 
+
+############################## test util #####################
 def timing(f):
     def wrapped(*args, **kwargs):
         t = time.time()
@@ -182,3 +190,4 @@ def timing(f):
         finally:
             print "Elapsed time:", time.time() - t, "msecs"
     return wrapped
+########################### test util END#####################
