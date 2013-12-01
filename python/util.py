@@ -215,6 +215,17 @@ def last(l): return l[-1]
 
 def  inc(x): return x + 1 
 def  dec(x): return x - 1
+
+def assoc(coll, k, v):
+    coll[k] = v
+    return coll
+
+def frequencies(coll):
+    return reduce(
+        lambda counts, x: assoc(counts, x, counts.get(x, 0) + 1),
+        coll,
+        {}
+    )
 ############################# util fn END ########################
 
 
