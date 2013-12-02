@@ -4,12 +4,13 @@
 #######################################################
 # @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 # @Setup Time:   Saturday, 30 November 2013.
-# @Updated Time: 2013-12-01 23:48:42
+# @Updated Time: 2013-12-02 12:34:06
 # @Description:  
 #######################################################
 
 
 import threading, Queue, time
+from multiprocessing import Process, Pipe
 
 ####################### Concurrence ###################
 class future(threading.Thread):
@@ -45,10 +46,9 @@ def pcall(fs):
     return map(deref, [future(f) for f in fs])
 
 ### p_map is not thread safe 
-def p_map(f, seqs, pool_size=30):
-    q = Queue.Queue(pool_size)
-    ret = []
-    argvs = zip(seqs)
+def p_map(f, *seqs, **kwargs):
+    q = Queue.Queue(kwargs.get('pool_size', 30))
+    argvs = zip(*seqs)
     #argvs = seqs
     def worker():
         for argv in argvs:
@@ -69,6 +69,43 @@ def p_map(f, seqs, pool_size=30):
         #def has_next(self): return self.capacity > 0
         def __iter__(self): return self
     return ResultSet(q, len(argvs))
+
+def _exec(f, argv):
+    def worker(cf, argv):
+        try:
+            cf.send(f(*argv))
+        finally:
+            cf.close()
+
+    pf, cf = Pipe()
+    p = Process(target=worker, args=(cf, argv))
+    p.start()
+    return pf
+
+def ppmap(f, *seqs):
+    return [pf.recv() for pf in [_exec(f, argv) for argv in zip(*seqs)]]
+
+def pp_map(f, *seqs, **kwargs):
+    q = Queue.Queue(kwargs.get('pool_size', 4))
+    argvs = zip(*seqs)
+    def run():
+        for argv in argvs:
+            q.put(_exec(f, argv))
+    t = threading.Thread(target=run)
+    t.daemon = True
+    t.start()
+    class ResultSet(object):
+        def __init__(self, q, capacity):
+            self.q = q
+            self.capacity = capacity
+        def __iter__(self): return self
+        def next(self):
+            if self.capacity > 0:
+                self.capacity -= 1
+                return self.q.get().recv()
+            raise StopIteration
+    return ResultSet(q, len(argvs))
+
 ####################### Concurrence END ###################
         
 
@@ -191,3 +228,4 @@ def timing(f):
             print "Elapsed time:", time.time() - t, "msecs"
     return wrapped
 ########################### test util END#####################
+
