@@ -4,7 +4,7 @@
 #######################################################
 # @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 # @Setup Time:   Saturday, 30 November 2013.
-# @Updated Time: 2013-12-02 12:34:06
+# @Updated Time: 2013-12-02 19:45:43
 # @Description:  
 #######################################################
 
@@ -225,7 +225,6 @@ def timing(f):
         try:
             return f(*args, **kwargs)
         finally:
-            print "Elapsed time:", time.time() - t, "msecs"
+            print "Elapsed time:", 1000 * (time.time() - t), "msecs"
     return wrapped
-########################### test util END#####################
-
+########################### test util END #####################
