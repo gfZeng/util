@@ -4,7 +4,7 @@
 #######################################################
 # @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 # @Setup Time:   Saturday, 30 November 2013.
-# @Updated Time: 2013-12-02 22:10:18
+# @Updated Time: 2013-12-17 18:42:25
 # @Description:  
 #######################################################
 
@@ -231,11 +231,29 @@ def frequencies(coll):
 
 ############################## test util #####################
 def timing(f):
-    def wrapped(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         t = time.time()
         try:
             return f(*args, **kwargs)
         finally:
             print "Elapsed time:", 1000 * (time.time() - t), "msecs"
-    return wrapped
+    return wrapper
 ########################### test util END #####################
+
+
+########################## multiple methods ###################
+def defmulti(switcher_fn):
+    def dispatcher(*args, **kwargs):
+        key = switcher_fn(*args, **kwargs)
+        func = dispatcher.dispatch_map.get(key)
+        if func:
+            return func(*args, **kwargs)
+        raise Exception("No function defined for dispatch value: %s" % key)
+    dispatcher.dispatch_map = {}
+    return dispatcher
+
+def defmethod(multi_fn, key):
+    def inner(wrapped):
+        multi_fn.dispatch_map[key] = wrapped
+        return multi_fn
+    return inner
