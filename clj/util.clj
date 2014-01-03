@@ -1,7 +1,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 ; @Setup Time:   Thursday, 19 December 2013.
-; @Updated Time: 2013-12-19 02:37:50
+; @Updated Time: 2013-12-24 01:40:12
 ; @Description:  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -31,3 +31,10 @@
                   (gen-dir-tree dir))))
     (.mkdir (java.io.File. dir))))
 
+(defmacro defvar [ss vs]
+  (if (symbol? ss)
+    `(def ~ss ~vs)
+    (mapv eval
+          (map (comp list* vector) (repeat 'def) ss vs))))
+
+(load-file "../test.clj")
