@@ -8,6 +8,7 @@
 
 using std::vector;
 using std::string;
+using std::auto_ptr;
 
 int
 get_idx(char c)
@@ -23,7 +24,15 @@ public:
     string	*id;
 
     S_List(string *id, S_List *next);
+    ~S_List(void);
 };
+
+S_List::~S_List(void)
+{
+    std::cout << "OH! I'm dead! ======== S_List" << std::endl;
+    if (this->next != NULL)
+	delete this->next;
+}
 
 S_List::S_List(string *id, S_List *next)
 {
@@ -52,11 +61,8 @@ Py_Tree::add_Id(string *id)
 
 Py_Tree::~Py_Tree(void)
 {
-    for (S_List *id = this->ids; id != NULL;) {
-	S_List *next = id->next;
-	delete id;
-	id = next;
-    }
+    std::cout << "OH! I'm dead!" << std::endl;
+    delete this->ids;
 
     for (int i = 0; i < N_CHILD; i++)
 	if (this->next[i] != NULL)
@@ -127,10 +133,25 @@ pr_tree(Py_Tree *tree)
 int
 main(void)
 {
+#define host "violet"
+#define db string("newhao123")
+    mongo::DBClientConnection mc;
+    mc.connect(host);
+    int cnt = mc.count(db + ".pinyin_index");
+    std::cout << cnt << std::endl;
+
+    auto_ptr<mongo::DBClientCursor> cursor = mc.query(db+".pinyin_index");
+    while (cursor->more()) {
+	mongo::BSONObj item = cursor->next();
+	//std::cout << item.getField("_id").__oid().toString() << std::endl;
+	//std::cout << item.getStringField("title") << std::endl;
+	//std::cout << item.getField("pinyin").Array() << std::endl;
+	std::cout << item.toString() << std::endl;
+    }
     Py_Tree *pt = new Py_Tree();
     pt->fresh(new string("goodnews"), new string("egfdegfdegfdegfdegfdegfd"));
-    pr_tree(pt);
-    std::cout << *pt->next[24]->next[24]->next[13]->next[23]->next[14]->next[32]->next[28]->ids->id << std::endl;
+    //pr_tree(pt);
+    //std::cout << *pt->next[24]->next[24]->next[13]->next[23]->next[14]->next[32]->next[28]->ids->id << std::endl;
     delete pt;
     return 0;
 }
