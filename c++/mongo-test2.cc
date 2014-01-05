@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <iostream>
 
-#define ID_LEN 	24
-#define N_CHILD	36
+#define ID_LEN         24
+#define N_CHILD        36
 
 using std::vector;
 using std::string;
@@ -21,8 +21,8 @@ get_idx(char c)
 
 class S_List {
 public:
-    S_List 	*next;
-    string	*id;
+    S_List         *next;
+    string        *id;
 
     S_List(string *id, S_List *next);
     ~S_List(void);
@@ -32,7 +32,7 @@ S_List::~S_List(void)
 {
     //std::cout << "OH! I'm dead! ======== S_List" << std::endl;
     if (this->next != NULL)
-	delete this->next;
+        delete this->next;
 }
 
 S_List::S_List(string *id, S_List *next)
@@ -43,13 +43,13 @@ S_List::S_List(string *id, S_List *next)
 
 class Py_Tree {
 public:
-    Py_Tree 		*next[N_CHILD];
-    S_List 		*ids;
+    Py_Tree                 *next[N_CHILD];
+    S_List                 *ids;
     
     Py_Tree(void);
     ~Py_Tree(void);
 
-    Py_Tree *make_node(void);	
+    Py_Tree *make_node(void);        
     void fresh(string *py, string *id);
     void add_Id(string *id);
     Py_Tree *search(const char *s);
@@ -61,9 +61,9 @@ Py_Tree::search(const char *s)
 {
     Py_Tree *itree = this;
     for (int i = 0, len = strlen(s); i < len; i++) {
-	itree = itree->next[get_idx(s[i])];
-	if (itree == NULL)
-	    return NULL;
+        itree = itree->next[get_idx(s[i])];
+        if (itree == NULL)
+            return NULL;
     }
 
     return itree;
@@ -87,14 +87,14 @@ Py_Tree::~Py_Tree(void)
     delete this->ids;
 
     for (int i = 0; i < N_CHILD; i++)
-	if (this->next[i] != NULL)
-	    delete this->next[i];
+        if (this->next[i] != NULL)
+            delete this->next[i];
 }
 
 Py_Tree::Py_Tree(void)
 {
     for (int i = 0; i < N_CHILD; i++)
-    	next[i] = NULL;
+            next[i] = NULL;
     ids = NULL;
 }
 
@@ -109,20 +109,20 @@ void
 Py_Tree::fresh(string *py, string *id)
 {
     if (id->length() != 24) {
-	std::cout << "[ERROR in Py_Tree::fresh()]: Bad id -> " << id << std::endl;
-	return;
+        std::cout << "[ERROR in Py_Tree::fresh()]: Bad id -> " << id << std::endl;
+        return;
     }
 
     Py_Tree *itree, *node;
     for (int len = py->length(), i = len - 1; i >= 0; i--) {
-	itree = this;
-	for (int j = i; j < len; j++) {
-	    int idx = get_idx(py->at(j));
-	    node = itree;
-	    if ((itree = itree->next[idx]) == NULL)
-		itree = node->next[idx] = new Py_Tree();
-	}
-	itree->add_Id(id);
+        itree = this;
+        for (int j = i; j < len; j++) {
+            int idx = get_idx(py->at(j));
+            node = itree;
+            if ((itree = itree->next[idx]) == NULL)
+                itree = node->next[idx] = new Py_Tree();
+        }
+        itree->add_Id(id);
     }
 }
 
@@ -130,7 +130,7 @@ void
 pr_ids(S_List *ids)
 {
     for (S_List *id = ids; id != NULL; id = id->next)
-	std::cout <<  *(id->id) << '\t';
+        std::cout <<  *(id->id) << '\t';
     std::cout << std::endl;
 }
 
@@ -166,23 +166,23 @@ main(void)
     auto_ptr<mongo::DBClientCursor> cursor = mc.query(db+".pinyin_index");
     char *is = new char[2];
     while (cursor->more()) {
-	mongo::BSONObj item = cursor->next();
-	//std::cout << item.getField("_id").__oid().toString() << std::endl;
-	string *_id = new string(item.getField("_id").__oid().toString());
-	//std::cout << item.getStringField("title") << std::endl;
-	mongo::BSONObj py = item.getObjectField("pinyin");
-	for (int i = 0; ; i++) {
-	    sprintf(is, "%d", i);
-	    string *s = new string(py.getStringField(is));
-	    if (s->empty()) {
-		delete s;
-		break;
-	    }
-	    pt->fresh(s, _id);
-	    delete s;
-	}
-	//std::cout << (strlen(item.getObjectField("pinyin").getStringField("3"))) << std::endl;
-	//std::cout << item.toString() << std::endl;
+        mongo::BSONObj item = cursor->next();
+        //std::cout << item.getField("_id").__oid().toString() << std::endl;
+        string *_id = new string(item.getField("_id").__oid().toString());
+        //std::cout << item.getStringField("title") << std::endl;
+        mongo::BSONObj py = item.getObjectField("pinyin");
+        for (int i = 0; ; i++) {
+            sprintf(is, "%d", i);
+            string *s = new string(py.getStringField(is));
+            if (s->empty()) {
+                delete s;
+                break;
+            }
+            pt->fresh(s, _id);
+            delete s;
+        }
+        //std::cout << (strlen(item.getObjectField("pinyin").getStringField("3"))) << std::endl;
+        //std::cout << item.toString() << std::endl;
     }
 
     delete is;
