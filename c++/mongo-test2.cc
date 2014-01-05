@@ -1,6 +1,7 @@
 #include "mongo/client/dbclient.h"
 #include <stdio.h>
 #include <cstdlib>
+#include <stdlib.h>
 #include <iostream>
 
 #define ID_LEN 	24
@@ -15,7 +16,7 @@ get_idx(char c)
 {
     if (c >= '0' && c <= '9')
         return c - '0';
-    return c - 'a' + 10;
+    return c - 'A' + 10;
 }
 
 class S_List {
@@ -29,7 +30,7 @@ public:
 
 S_List::~S_List(void)
 {
-    std::cout << "OH! I'm dead! ======== S_List" << std::endl;
+    //std::cout << "OH! I'm dead! ======== S_List" << std::endl;
     if (this->next != NULL)
 	delete this->next;
 }
@@ -51,7 +52,28 @@ public:
     Py_Tree *make_node(void);	
     void fresh(string *py, string *id);
     void add_Id(string *id);
+    Py_Tree *search(const char *s);
+    Py_Tree *search(string s);
 };
+
+Py_Tree *
+Py_Tree::search(const char *s)
+{
+    Py_Tree *itree = this;
+    for (int i = 0, len = strlen(s); i < len; i++) {
+	itree = itree->next[get_idx(s[i])];
+	if (itree == NULL)
+	    return NULL;
+    }
+
+    return itree;
+}
+
+Py_Tree *
+Py_Tree::search(string s)
+{
+    return this->search(s.c_str());
+}
 
 void
 Py_Tree::add_Id(string *id)
@@ -61,7 +83,7 @@ Py_Tree::add_Id(string *id)
 
 Py_Tree::~Py_Tree(void)
 {
-    std::cout << "OH! I'm dead!" << std::endl;
+    //std::cout << "OH! I'm dead!" << std::endl;
     delete this->ids;
 
     for (int i = 0; i < N_CHILD; i++)
@@ -102,14 +124,13 @@ Py_Tree::fresh(string *py, string *id)
 	}
 	itree->add_Id(id);
     }
-
 }
 
 void
 pr_ids(S_List *ids)
 {
     for (S_List *id = ids; id != NULL; id = id->next)
-	std::cout <<  *(id->id);
+	std::cout <<  *(id->id) << '\t';
     std::cout << std::endl;
 }
 
@@ -133,7 +154,9 @@ pr_tree(Py_Tree *tree)
 int
 main(void)
 {
-#define host "violet"
+    Py_Tree *pt = new Py_Tree();
+
+#define host "sz.togic.com"
 #define db string("newhao123")
     mongo::DBClientConnection mc;
     mc.connect(host);
@@ -141,17 +164,34 @@ main(void)
     std::cout << cnt << std::endl;
 
     auto_ptr<mongo::DBClientCursor> cursor = mc.query(db+".pinyin_index");
+    char *is = new char[2];
     while (cursor->more()) {
 	mongo::BSONObj item = cursor->next();
 	//std::cout << item.getField("_id").__oid().toString() << std::endl;
+	string *_id = new string(item.getField("_id").__oid().toString());
 	//std::cout << item.getStringField("title") << std::endl;
-	//std::cout << item.getField("pinyin").Array() << std::endl;
-	std::cout << item.toString() << std::endl;
+	mongo::BSONObj py = item.getObjectField("pinyin");
+	for (int i = 0; ; i++) {
+	    sprintf(is, "%d", i);
+	    string *s = new string(py.getStringField(is));
+	    if (s->empty()) {
+		delete s;
+		break;
+	    }
+	    pt->fresh(s, _id);
+	    delete s;
+	}
+	//std::cout << (strlen(item.getObjectField("pinyin").getStringField("3"))) << std::endl;
+	//std::cout << item.toString() << std::endl;
     }
-    Py_Tree *pt = new Py_Tree();
-    pt->fresh(new string("goodnews"), new string("egfdegfdegfdegfdegfdegfd"));
+
+    delete is;
+
+    pr_tree(pt->search("A"));
+    //pt->fresh(new string("goodnews"), new string("egfdegfdegfdegfdegfdegfd"));
     //pr_tree(pt);
     //std::cout << *pt->next[24]->next[24]->next[13]->next[23]->next[14]->next[32]->next[28]->ids->id << std::endl;
+    sleep(10);
     delete pt;
     return 0;
 }
