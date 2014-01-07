@@ -4,8 +4,8 @@
 #######################################################
 # @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 # @Setup Time:   Saturday, 30 November 2013.
-# @Updated Time: 2013-12-17 18:42:25
-# @Description:  
+# @Updated Time: 2014-01-08 00:31:02
+# @Description:
 #######################################################
 
 
@@ -45,7 +45,38 @@ def pmap(f, *seqs):
 def pcall(fs):
     return map(deref, [future(f) for f in fs])
 
-### p_map is not thread safe 
+def inject_to(o):
+    def inject(fn):
+        o.__setattr__(fn.func_name, fn)
+    return inject
+
+def set_interval(fn, start, interval=None):
+    if not interval:
+        interval = start
+        start = 0
+
+    def job():
+        time.sleep(start)
+        while not job.canceled:
+            fn()
+            time.sleep(job.interval)
+
+    job.canceled = False
+    job.interval = interval
+    t = threading.Thread(target=job)
+
+    @inject_to(t)
+    def change_interval(interval):
+        job.interval = interval
+
+    @inject_to(t)
+    def cancel():
+        job.canceled = True
+    t.start()
+
+    return t
+
+### p_map is not thread safe
 def p_map(f, *seqs, **kwargs):
     q = Queue.Queue(kwargs.get('pool_size', 30))
     argvs = zip(*seqs)
@@ -107,7 +138,7 @@ def pp_map(f, *seqs, **kwargs):
     return ResultSet(q, len(argvs))
 
 ####################### Concurrence END ###################
-        
+
 
 ####################### Observer ######################
 
@@ -150,7 +181,7 @@ class Girl(object):
         self.watchers.append((k, w))
     def remove_watch(self, k, w):
         self.watchers.remove((k, w))
-        
+
     def _notify_watchers(self, ov, nv):
         for k, w in self.watchers:
             try:
@@ -184,7 +215,7 @@ def dostream(ret, *ls):
         if hasattr(l, '__call__'):
             ret = l(ret)
         elif type(l) in (tuple, list):
-            ret = l[0](ret, *l[1:]) 
+            ret = l[0](ret, *l[1:])
         else:
             raise Exception("bad arguments", l)
     return ret
@@ -194,7 +225,7 @@ def donestream(ret, *ls):
         if hasattr(l, '__call__'):
             ret = l(ret)
         elif type(l) in (tuple, list):
-            ret = l[0](*(l[1:]+type(l)((ret,)))) 
+            ret = l[0](*(l[1:]+type(l)((ret,))))
         else:
             raise Exception("bad arguments", l)
     return ret
@@ -213,7 +244,7 @@ def first(l): return l[0]
 def second(l): return l[1]
 def last(l): return l[-1]
 
-def  inc(x): return x + 1 
+def  inc(x): return x + 1
 def  dec(x): return x - 1
 
 def assoc(coll, k, v):
@@ -257,3 +288,12 @@ def defmethod(multi_fn, key):
         multi_fn.dispatch_map[key] = wrapped
         return multi_fn
     return inner
+
+######################### IO util #############################
+def slurp(file_name):
+    with open(file_name, 'r') as f:
+        return f.read()
+
+def spit(file_name, string, encoding="utf-8"):
+    with open(file_name, 'w') as f:
+        f.write(string)
