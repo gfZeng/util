@@ -8,7 +8,7 @@
 #define ID_LEN         24
 #define N_CHILD        36
 
-#define timing(f) {long t = cur_ms(); f; printf("Elapsed time is: %lds\n", cur_ms() - t);}
+#define timing(f) {long t = cur_ms(); f; printf("Elapsed time is: %ldms\n", cur_ms() - t);}
 
 using std::vector;
 using std::string;
@@ -61,18 +61,11 @@ S_List::concat(S_List *olist)
 
 S_List::~S_List(void)
 {
-    //std::cout << "OH! I'm dead! ======== S_List" << std::endl;
-    //delete this->id;
-    pr_ids(this);
-    for (; this->next != NULL; this->next = this->next->next) {
-        //free(this->next->id);
-        printf("is that good, ==== %p\n", this->next);
-        std::cout << *this->next->id << std::endl;
-        free(this->next);
+    while (this->next != NULL) {
+	S_List *ilist = this->next;
+	this->next = this->next->next;
+	free(ilist);
     }
-        printf("is that good 2\n");
-    //if (this->next != NULL)
-    //delete this->next;
 }
 
 S_List::S_List(string *id, S_List *next)
@@ -150,7 +143,6 @@ Py_Tree::~Py_Tree(void)
     //std::cout << "OH! I'm dead!" << std::endl;
     delete this->ids;
 
-    std::cout << "OH! I'm dead!" << std::endl;
     for (int i = 0; i < N_CHILD; i++)
         if (this->next[i] != NULL)
             delete this->next[i];
@@ -230,7 +222,7 @@ main(int argc, char *argv[])
     Py_Tree *pt = new Py_Tree();
 
     std::cout << cur_ms() << std::endl;
-#define host "localhost"
+#define host "violet"
 #define db string("newhao123")
     mongo::DBClientConnection mc;
     mc.connect(host);
@@ -264,6 +256,7 @@ main(int argc, char *argv[])
     //timing(pr_tree(pt->search(argv[1])));
     for (int i = 1; i < argc; i++) {
         Py_Tree *ipt = pt->search(argv[i]);
+	pr_tree(ipt);
         timing(if (ipt != NULL) ipt->get_all_ids());
     }
     //pt->fresh(new string("goodnews"), new string("egfdegfdegfdegfdegfdegfd"));
