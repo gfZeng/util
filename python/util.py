@@ -4,7 +4,7 @@
 #######################################################
 # @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 # @Setup Time:   Saturday, 30 November 2013.
-# @Updated Time: 2014-01-08 00:31:02
+# @Updated Time: 2014-01-08 11:05:56
 # @Description:
 #######################################################
 
@@ -297,3 +297,14 @@ def slurp(file_name):
 def spit(file_name, string, encoding="utf-8"):
     with open(file_name, 'w') as f:
         f.write(string)
+
+
+def memoize(fn):
+    mem = {}
+    def wrapped(*args):
+        ret = mem.get(args)
+        if not ret:
+            ret = fn(*args)
+            mem[args] = ret
+        return ret
+    return wrapped
