@@ -4,7 +4,7 @@
 #######################################################
 # @Autor:        Isaac.Zeng ~~~ gaofeng.zeng@togic.com
 # @Setup Time:   Saturday, 30 November 2013.
-# @Updated Time: 2014-01-08 11:05:56
+# @Updated Time: 2014-01-15 15:17:07
 # @Description:
 #######################################################
 
@@ -47,7 +47,8 @@ def pcall(fs):
 
 def inject_to(o):
     def inject(fn):
-        o.__setattr__(fn.func_name, fn)
+        setattr(o, fn.func_name, fn)
+        #o.__setattr__(fn.func_name, fn)
     return inject
 
 def set_interval(fn, start, interval=None):
@@ -299,6 +300,7 @@ def spit(file_name, string, encoding="utf-8"):
         f.write(string)
 
 
+########################### memoize ############################
 def memoize(fn):
     mem = {}
     def wrapped(*args):
@@ -308,3 +310,22 @@ def memoize(fn):
             mem[args] = ret
         return ret
     return wrapped
+
+
+
+def pre(validate):
+    def wrap(fn):
+        def wrapped(*args, **kwargs):
+            assert validate(*args, **kwargs)
+            return fn(*args, **kwargs)
+        return wrapped
+    return wrap
+
+def post(validate):
+    def wrap(fn):
+        def wrapped(*args, **kwargs):
+            ret = fn(*args, **kwargs)
+            assert validate(ret)
+            return ret
+        return wrapped
+    return wrap
