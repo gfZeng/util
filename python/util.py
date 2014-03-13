@@ -329,3 +329,18 @@ def post(validate):
             return ret
         return wrapped
     return wrap
+
+class Fn(object):
+    def __init__(self):
+        object.__init__(self)
+
+    def __add__(self, other):
+        return lambda x, y: x + y
+    def __mul__(self, other):
+        return lambda x, y: x * y
+    def __div__(self, other):
+        return lambda x, y: x / y
+
+
+
+_ = Fn()
