@@ -344,3 +344,10 @@ class Fn(object):
 
 
 _ = Fn()
+
+def coroutine(f):
+    def starter(*args, **kwargs):
+        cr = f(*args, **kwargs)
+        cr.next()
+        return cr
+    return starter
