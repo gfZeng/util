@@ -351,3 +351,6 @@ def coroutine(f):
         cr.next()
         return cr
     return starter
+
+def async(f):
+    return lambda *args, **kwargs: future(f, *args, **kwargs)
