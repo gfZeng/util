@@ -354,3 +354,26 @@ def coroutine(f):
 
 def async(f):
     return lambda *args, **kwargs: future(f, *args, **kwargs)
+
+def once(f):
+    mem = [False, None]
+    def onced(*args, **kwargs):
+        if mem[0]:
+            return mem[1]
+        mem[1] = f(*args, **kwargs)
+        mem[0] = True
+        return mem[1]
+    return onced
+
+def lock(f):
+    l = threading.Lock()
+    def locked(*args, **kwargs):
+        l.acquire()
+        try:
+            return f(*args, **kwargs)
+        finally:
+            l.release()
+    return locked
+
+def parse_command_line(args):
+    return {args[i].replace("--", ""): args[i+1] for i in range (0, len(args), 2)}
