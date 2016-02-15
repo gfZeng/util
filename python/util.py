@@ -143,37 +143,9 @@ def pp_map(f, *seqs, **kwargs):
 
 ####################### Observer ######################
 
-### Girl is a Observable object, implements by use Closure
-'''
-class Girl(object):
+### Atom is a Observable object, implements by use Closure
 
-    def __init__(self, o):
-        self.o = o
-
-    def reset(self, no):
-        self.o = no
-
-    def swap(self, fn, *args, **kwargs):
-        self.o = fn(self.o, *args, **kwargs)
-
-    def add_watch(self, k, watch):
-        def wrap(fn):
-            def nfn(*args, **kwargs):
-                oo = self.o
-                fn(*args, **kwargs)
-                watch(k, self, oo, self.o)
-            return nfn
-        self.reset = wrap(self.reset)
-        self.swap = wrap(self.swap)
-
-    def deref(self):
-        return self.o
-
-    def __call__(self):
-        return self.o
-'''
-
-class Girl(object):
+class Atom(object):
     def __init__(self, v):
         self.v = v
         self.watchers = []
